@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.VisualStudio.Web.CodeGeneration.Contracts.Messaging;
 using UsersManagement.Models;
 using UsersManagement.Services;
 using IEmailSender = UsersManagement.Services.IEmailSender;
@@ -38,6 +33,13 @@ namespace UsersManagement.Controllers
         [HttpPost("register")]
         public async Task<Object> RegisterUser([FromBody]ApplicationUserViewModel model)
         {
+            if(model == null)
+            {
+                return BadRequest(new {
+                    ErrorMessage ="Please Enter your informations"
+                    });
+            }
+
             ApplicationUser applicationUser = new ApplicationUser
             {
                 UserName = model.Username,
@@ -62,6 +64,13 @@ namespace UsersManagement.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody]LoginModel model)
         {
+            if(model == null)
+            {
+                return BadRequest(new {
+                    ErrorMessage ="Please set your credentials"
+                    });
+            }
+
             ApplicationUser dbUser = await _userManager.FindByNameAsync(model.UserName);
 
             if(!dbUser.EmailConfirmed)
@@ -86,6 +95,13 @@ namespace UsersManagement.Controllers
         [HttpGet]
         public async Task<Object> ConfirmEmail(string validToken, string email)
         {
+            if(email == null || validToken == null)
+            {
+                return BadRequest(new {
+                    ErrorMessage ="Please set your email"
+                    });
+            }
+
             var user = await _userManager.FindByEmailAsync(email);
 
             if (user == null)
@@ -122,7 +138,14 @@ namespace UsersManagement.Controllers
 
         [HttpPost("forgetpassword")]
         public async Task<Object> ForgetPassword([FromBody]ResettingPasswordModel model)
-        {
+        {   
+            if(model == null)
+            {
+                return BadRequest(new {
+                    ErrorMessage ="Please set your mail"
+                    });
+            }
+
             var user = await _userManager.FindByEmailAsync(model.Email);
 
             if(user == null)
@@ -142,6 +165,12 @@ namespace UsersManagement.Controllers
         [HttpPost("resetpassword")]
         public async Task<Object> ResetPassword(string email, string validToken, [FromBody]UpdatePasswordModel passwordModel)
         {
+            if(passwordModel == null)
+            {
+                return BadRequest(new {
+                    ErrorMessage ="Please set your informations"
+                    });
+            }
 
             if (passwordModel.Password != passwordModel.ConfirmPassword)
                 return BadRequest(new {ErrorMessage = "Password doesn't match its confirmation"});
