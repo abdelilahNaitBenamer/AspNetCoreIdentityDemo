@@ -13,6 +13,7 @@ using UsersManagement.Models;
 using UsersManagement.Services;
 using Microsoft.Extensions.Hosting;
 using IEmailSender = UsersManagement.Services.IEmailSender;
+using Microsoft.OpenApi.Models;
 
 namespace UsersManagement
 {
@@ -28,6 +29,11 @@ namespace UsersManagement
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "ImplementJWT", Version = "v1" });
+            });
+
             services.AddMvc();
             services.AddDbContext<AuthenticationContext>(options => 
                     options.UseSqlServer(Configuration.GetConnectionString("IdentityConnection"))
@@ -83,15 +89,15 @@ namespace UsersManagement
             app.UseHttpsRedirection();
 
             app.UseRouting();
-
-            app.UseAuthorization();
-
-            app.UseAuthentication();
             app.UseCors(builder => builder
                 .WithOrigins("*")
                 .AllowAnyHeader()
                 .AllowAnyMethod()
             );
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+
 
             app.UseEndpoints(endpoints =>
             {

@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.WebUtilities;
 using UsersManagement.Models;
 using UsersManagement.Services;
 using IEmailSender = UsersManagement.Services.IEmailSender;
+using Microsoft.AspNetCore.Cors;
+using Microsoft.Extensions.Configuration;
+using System.Collections.Generic;
 
 namespace UsersManagement.Controllers
 {
@@ -21,13 +24,15 @@ namespace UsersManagement.Controllers
         private SignInManager<ApplicationUser> _signInManager;
         private ITokenBuilder _tokenBuilder;
         private IEmailSender _emailSender;
+        private IConfiguration Configuration { get; }
 
-        public UserController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ITokenBuilder tokenBuilder, IEmailSender sender)
+        public UserController(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, ITokenBuilder tokenBuilder, IEmailSender sender, IConfiguration configuration)
         {
             _userManager = userManager;
             _signInManager = signInManager;
             _tokenBuilder = tokenBuilder;
             _emailSender = sender;
+            Configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -53,7 +58,12 @@ namespace UsersManagement.Controllers
                 var token = await _userManager.GenerateEmailConfirmationTokenAsync(applicationUser);
                 var encodedToken = Encoding.UTF8.GetBytes(token);
                 var validToken = WebEncoders.Base64UrlEncode(encodedToken);
-                var callbackUrl = Url.Action(nameof(ConfirmEmail), "User", new { email = applicationUser.Email , validToken }, Request.Scheme);
+                var param = new Dictionary<string, string>
+                {
+                    {"token", validToken },
+                    {"email", applicationUser.Email }
+                };
+                var callbackUrl = QueryHelpers.AddQueryString(Configuration["ConfirmationClientURI"],param);
                 await _emailSender.SendEmailAsync(model.Email, "Confirm your email",
                     $"Please confirm your account by <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>clicking here</a>.");
             }
@@ -73,6 +83,11 @@ namespace UsersManagement.Controllers
 
             ApplicationUser dbUser = await _userManager.FindByNameAsync(model.UserName);
 
+            if(dbUser == null)
+            {
+                return NotFound(new {ErrorMessage = "User not found"});
+            }
+
             if(!dbUser.EmailConfirmed)
             {
                 return Unauthorized(new {
@@ -82,9 +97,9 @@ namespace UsersManagement.Controllers
              
             var result = await _userManager.CheckPasswordAsync(dbUser, model.Password);
 
-            if (dbUser == null || !result)
+            if (!result)
             {
-                return NotFound(new {ErrorMessage = "User not found or password incorrect."});
+                return NotFound(new {ErrorMessage = "Password incorrect."});
             }
 
             var token = _tokenBuilder.CreateToken(dbUser);
@@ -92,28 +107,28 @@ namespace UsersManagement.Controllers
             return Ok(new { Token = token});
         }
 
-        [HttpGet]
-        public async Task<Object> ConfirmEmail(string validToken, string email)
+        [HttpPost("emailconfirmation")]
+        public async Task<Object> ConfirmEmail([FromBody] ConfirmationEmailModele modele)
         {
-            if(email == null || validToken == null)
+            if(modele.Email == null || modele.Token == null)
             {
                 return BadRequest(new {
                     ErrorMessage ="Please set your email"
                     });
             }
 
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByEmailAsync(modele.Email);
 
             if (user == null)
                 return NotFound("User Not Found");
 
-            var decodedToken = WebEncoders.Base64UrlDecode(validToken);
+            var decodedToken = WebEncoders.Base64UrlDecode(modele.Token);
             string normalToken = Encoding.UTF8.GetString(decodedToken);
             var result = await _userManager.ConfirmEmailAsync(user, normalToken);
 
             if (result.Succeeded)
             {
-                return Ok("Your account is confirmed succesfully");
+                return Ok(result);
             }
 
             return BadRequest("Your account does not confirmed succesfully");
@@ -136,6 +151,31 @@ namespace UsersManagement.Controllers
             };
         }
 
+        [HttpPut("profil")]
+        [Authorize]
+        public async Task<Object> EditUserProfil([FromBody]ApplicationUser entity)
+        {
+            string userId = User.Claims.First(c => c.Type == "UserID").Value;
+
+            if(entity == null){
+                return BadRequest("Invalid Request");
+            }
+
+            ApplicationUser user = await _userManager.FindByIdAsync(userId);
+
+            if (user == null)
+                return NotFound("User Not Found");
+
+            user.FullName = entity.FullName;
+            var result = await _userManager.UpdateAsync(user);
+
+            if(result.Succeeded){
+                return Ok(user);
+            }
+
+            return BadRequest(new {ErrorMessage="Error occurred during updating the user"});
+        }
+
         [HttpPost("forgetpassword")]
         public async Task<Object> ForgetPassword([FromBody]ResettingPasswordModel model)
         {   
@@ -154,16 +194,20 @@ namespace UsersManagement.Controllers
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var encodedToken = Encoding.UTF8.GetBytes(token);
             var validToken = WebEncoders.Base64UrlEncode(encodedToken);
-
-            var callbackUrl = Url.Action(nameof(ResetPassword), "User", new { email = user.Email, validToken }, Request.Scheme);
-            await _emailSender.SendEmailAsync(user.Email, "Reset Password",
+            var param = new Dictionary<string, string>
+            {
+                {"token", validToken },
+                {"email", user.Email }
+            };
+            var callbackUrl = QueryHelpers.AddQueryString(Configuration["ResettingPasswordClientURI"],param);
+            await _emailSender.SendEmailAsync(user.Email, "Reset Your Password",
                    $"To reset your password <a href='{HtmlEncoder.Default.Encode(callbackUrl)}'>click here</a>.");
 
             return Ok(new {SuccessMessage = "Reset password URL has been sent to the email successfully!"});
         }
 
         [HttpPost("resetpassword")]
-        public async Task<Object> ResetPassword(string email, string validToken, [FromBody]UpdatePasswordModel passwordModel)
+        public async Task<Object> ResetPassword([FromBody]UpdatePasswordModel passwordModel)
         {
             if(passwordModel == null)
             {
@@ -175,12 +219,12 @@ namespace UsersManagement.Controllers
             if (passwordModel.Password != passwordModel.ConfirmPassword)
                 return BadRequest(new {ErrorMessage = "Password doesn't match its confirmation"});
 
-            var user = await _userManager.FindByEmailAsync(email);
+            var user = await _userManager.FindByEmailAsync(passwordModel.Email);
 
             if (user == null)
                 return NotFound(new {ErrorMessage = "No user associated with email"});
 
-            var decodedToken = WebEncoders.Base64UrlDecode(validToken);
+            var decodedToken = WebEncoders.Base64UrlDecode(passwordModel.Token);
             string normalToken = Encoding.UTF8.GetString(decodedToken);
 
             var result = await _userManager.ResetPasswordAsync(user,normalToken,passwordModel.Password);

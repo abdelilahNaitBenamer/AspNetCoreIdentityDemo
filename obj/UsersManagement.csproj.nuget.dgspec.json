@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\DYOU MAX\\source\\repos\\UsersManagement\\UsersManagement\\UsersManagement.csproj": {}
+    "C:\\Users\\DYOU MAX\\source\\repos\\AspNetCoreIdentityDemo\\UsersManagement.csproj": {}
   },
   "projects": {
-    "C:\\Users\\DYOU MAX\\source\\repos\\UsersManagement\\UsersManagement\\UsersManagement.csproj": {
+    "C:\\Users\\DYOU MAX\\source\\repos\\AspNetCoreIdentityDemo\\UsersManagement.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\DYOU MAX\\source\\repos\\UsersManagement\\UsersManagement\\UsersManagement.csproj",
+        "projectUniqueName": "C:\\Users\\DYOU MAX\\source\\repos\\AspNetCoreIdentityDemo\\UsersManagement.csproj",
         "projectName": "UsersManagement",
-        "projectPath": "C:\\Users\\DYOU MAX\\source\\repos\\UsersManagement\\UsersManagement\\UsersManagement.csproj",
+        "projectPath": "C:\\Users\\DYOU MAX\\source\\repos\\AspNetCoreIdentityDemo\\UsersManagement.csproj",
         "packagesPath": "C:\\Users\\DYOU MAX\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\DYOU MAX\\source\\repos\\UsersManagement\\UsersManagement\\obj\\",
+        "outputPath": "C:\\Users\\DYOU MAX\\source\\repos\\AspNetCoreIdentityDemo\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
@@ -21,14 +21,15 @@
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "netcoreapp2.2"
+          "net5.0"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "netcoreapp2.2": {
+          "net5.0": {
+            "targetAlias": "net5.0",
             "projectReferences": {}
           }
         },
@@ -39,42 +40,50 @@
         }
       },
       "frameworks": {
-        "netcoreapp2.2": {
+        "net5.0": {
+          "targetAlias": "net5.0",
           "dependencies": {
             "ElasticEmail.WebApiClient": {
               "target": "Package",
-              "version": "[1.3.106, )"
-            },
-            "Microsoft.AspNetCore.App": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[2.2.0, )",
-              "autoReferenced": true
+              "version": "[1.3.107, )"
             },
             "Microsoft.AspNetCore.Authentication.JwtBearer": {
               "target": "Package",
-              "version": "[2.2.0, )"
+              "version": "[5.0.2, )"
             },
-            "Microsoft.AspNetCore.Razor.Design": {
-              "suppressParent": "All",
+            "Microsoft.AspNetCore.Cors": {
               "target": "Package",
               "version": "[2.2.0, )"
+            },
+            "Microsoft.AspNetCore.Identity.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[5.0.2, )"
+            },
+            "Microsoft.AspNetCore.Identity.UI": {
+              "target": "Package",
+              "version": "[5.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[5.0.2, )"
+            },
+            "Microsoft.EntityFrameworkCore.SqlServer": {
+              "target": "Package",
+              "version": "[5.0.2, )"
             },
             "Microsoft.EntityFrameworkCore.Tools": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers",
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
               "suppressParent": "All",
               "target": "Package",
-              "version": "[2.2.0, )"
-            },
-            "Microsoft.NETCore.App": {
-              "suppressParent": "All",
-              "target": "Package",
-              "version": "[2.2.0, )",
-              "autoReferenced": true
+              "version": "[5.0.2, )"
             },
             "Microsoft.VisualStudio.Web.CodeGeneration.Design": {
               "target": "Package",
-              "version": "[2.2.3, )"
+              "version": "[5.0.1, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[5.6.3, )"
             }
           },
           "imports": [
@@ -87,7 +96,15 @@
           ],
           "assetTargetFallback": true,
           "warn": true,
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\3.1.201\\RuntimeIdentifierGraph.json"
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\5.0.103\\RuntimeIdentifierGraph.json"
         }
       }
     }
